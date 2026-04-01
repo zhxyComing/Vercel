@@ -1,0 +1,7 @@
+# https://github.com/nicholasjackson/vercel-go-api-template
+node_modules/
+.next/
+.vercel/
+.env
+.env.local
+*.log
