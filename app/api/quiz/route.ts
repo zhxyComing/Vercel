@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { saveQuizRecord } from '@/lib/supabase'
 
 // 宠物数据库
 const PET_DATABASE = [
@@ -39,7 +40,7 @@ const PET_DATABASE = [
   },
   {
     pet: '无毛猫（斯芬克斯）',
-    emoji: '�猫咪',
+    emoji: '🐱',
     traits: '独特神秘型 · 亲密粘人 · 过敏友好',
     reason: '你个性独特，追求不一样的生活，斯芬克斯猫的反主流外表和深情性格专属于你。',
     keywords: ['quiet_home', 'medium_apt', '1_2h', 'strong_allergy', 'high_budget'],
@@ -60,12 +61,19 @@ const PET_DATABASE = [
   },
 ]
 
+// 所有合法的答案值
+const VALID_ANSWERS = new Set([
+  'quiet_home', 'active_outdoor', 'steady_routine', 'free_spirit',
+  'large_space', 'medium_apt', 'small_apt', 'shared_apt',
+  'less_1h', '1_2h', '2_4h', 'more_4h',
+  'no_allergy', 'mild_allergy', 'strong_allergy',
+  'low_budget', 'medium_budget', 'high_budget',
+])
+
 function matchPet(answers: string[]): typeof PET_DATABASE[0] {
-  // 简单匹配：根据回答找到最合适的宠物
-  // 这里先用规则匹配，也可以接入 OpenClaw AI 分析
   const answerSet = new Set(answers)
 
-  let bestMatch = PET_DATABASE[1] // 默认英短
+  let bestMatch = PET_DATABASE[1]
   let bestScore = 0
 
   for (const pet of PET_DATABASE) {
@@ -86,15 +94,28 @@ export async function POST(req: NextRequest) {
   try {
     const { answers } = await req.json()
 
-    if (!answers || !Array.isArray(answers) || answers.length < 5) {
+    // 严格验证：类型 + 长度 + 值的合法性
+    if (
+      !answers ||
+      !Array.isArray(answers) ||
+      answers.length !== 5 ||
+      !answers.every((a: unknown) => typeof a === 'string' && VALID_ANSWERS.has(a))
+    ) {
       return NextResponse.json({ error: 'Invalid answers' }, { status: 400 })
     }
 
-    // 方式一：直接本地匹配（无需配置，快速可用）
     const pet = matchPet(answers)
 
-    // 方式二：接入 OpenClaw AI（更智能，需要配置）
-    // 如果配置了 OPENCLAW_GATEWAY_URL，使用 AI 分析
+    // 异步保存到 Supabase（不阻塞返回）
+    saveQuizRecord({
+      answers,
+      pet: pet.pet,
+      emoji: pet.emoji,
+      traits: pet.traits,
+      reason: pet.reason,
+    })
+
+    // OpenClaw AI 分析（可选）
     const openclawUrl = process.env.OPENCLAW_GATEWAY_URL
     if (openclawUrl) {
       try {
