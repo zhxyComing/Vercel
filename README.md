@@ -42,11 +42,13 @@ git push -u origin main
 
 等 1-2 分钟，你的网站就上线了！
 
-默认地址：`https://Vercel.vercel.app`（Vercel 是你项目名）
+默认地址：`https://pet-match-dixonxu.vercel.app`（Vercel 是你项目名）
 
 ---
 
 ## 可选配置：接入 Supabase（记录用户答题）
+
+> 📝 **注意**：问卷已升级为 **8道题**，如果之前创建过表，不需要重建/schema 变更，字段 `answers TEXT[]` 天然支持任意长度。
 
 ### 1. 创建 Supabase 项目
 
