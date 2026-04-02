@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { saveQuizRecord } from '@/lib/supabase'
 
 // 宠物数据库（扩展版）
 const PET_DATABASE = [
@@ -226,6 +227,8 @@ export async function POST(req: NextRequest) {
 
     // OpenClaw AI 分析（可选）
     const openclawUrl = process.env.OPENCLAW_GATEWAY_URL
+    let result = pet
+
     if (openclawUrl) {
       try {
         const openclawRes = await fetch(`${openclawUrl}/v1/chat/completions`, {
@@ -251,10 +254,7 @@ export async function POST(req: NextRequest) {
           if (content) {
             try {
               const aiResult = JSON.parse(content)
-              return NextResponse.json({
-                ...aiResult,
-                compatibility: pet.compatibility,
-              })
+              result = { ...aiResult, compatibility: pet.compatibility }
             } catch {
               // JSON解析失败，使用本地匹配
             }
@@ -265,7 +265,16 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json(pet)
+    // 保存到数据库（异步，不阻塞返回）
+    saveQuizRecord({
+      answers,
+      pet: result.pet,
+      emoji: result.emoji,
+      traits: result.traits,
+      reason: result.reason,
+    })
+
+    return NextResponse.json(result)
   } catch (e) {
     console.error('Quiz error:', e)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })

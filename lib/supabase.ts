@@ -1,10 +1,12 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
-// 客户端用 anon key（公开），写入操作用 service role key
-export const supabase = createClient(supabaseUrl, supabaseKey)
+// 只有配置了才创建客户端，否则为 null
+export const supabase: SupabaseClient | null = supabaseUrl && supabaseKey
+  ? createClient(supabaseUrl, supabaseKey)
+  : null
 
 export interface QuizRecord {
   id?: number
@@ -17,7 +19,7 @@ export interface QuizRecord {
 }
 
 export async function saveQuizRecord(record: Omit<QuizRecord, 'id' | 'created_at'>) {
-  if (!supabaseUrl || !supabaseKey) {
+  if (!supabase) {
     console.warn('Supabase not configured, skipping save')
     return null
   }
