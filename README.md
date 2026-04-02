@@ -133,7 +133,7 @@ ngrok http 18789
 | Name | Value |
 |------|-------|
 | `OPENCLAW_GATEWAY_URL` | `https://xxxx.ngrok.io/v1` |
-| `OPENCLAW_API_KEY` | `f819e2f4ca1efac75766648adced99862907445b0ee48d66` |
+| `OPENCLAW_API_KEY` | 你的 OpenClaw Gateway Token（运行 `openclaw gateway token` 获取） |
 
 Redeploy 后，网站就会用 AI 来分析答题结果了！
 
